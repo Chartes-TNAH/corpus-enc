@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="../diple/xmldoc/rng_html.xsl"?>
+<rng:grammar
+  xmlns:rng="http://relaxng.org/ns/structure/1.0"
+  xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0"
+  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:h="http://www.w3.org/1999/xhtml"
+  datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes"
+  ns="http://www.tei-c.org/ns/1.0"
+>
+  <a:documentation>
+    <h1 id="testaments.rng">
+      <a href="http://elec.enc.sorbonne.fr/testaments">Testaments enregistrés au Parlement de Paris sous le règne de Charles VI</a>,
+    schéma de balisage</h1>
+    <ul class="auteurs">
+      <li>[OGJ] Olivier Guyotjeannin (École nationale des chartes) conseil diplomatique</li>
+      <li>[OC] Olivier Canteaut (École nationale des chartes) : conseil diplomatique</li>
+      <li>[MC] Marion Chaigne (Bibliothèque Sainte-Geneviève) : conseil diplomatique, transcription</li>
+    </ul>
+    <p>Ce schéma spécifie les particularités d'un corpus TEI de l'École nationale des chartes : les <i>Testaments enregistrés au Parlement de Paris sous le règne de Charles VI</i>.
+    Il importe plusieurs autres schémas partagés par les éditions de l'école :
+    </p>
+    <ul>
+      <li><a href="#acte.rng">acte.rng</a> — formalisation de certaines pratiques d'édition critique d'actes à l'École des chartes.</li>
+      <li><a href="#texte.rng">texte.rng</a> — des modèles de contenus pour le texte en général.</li>
+      <li><a href="#teiHeader.rng">teiHeader.rng</a> — entête fixe pour chaque fichier.</li>
+    </ul>
+        
+    <h2>Structure d'un testament</h2>
+    <p>Conformément à l'édition d'Alexandre Tuetey, les codicilles sont rattachés à leur testament. Marion Chaigne a cependant veillé à bien distinguer le testament de ses différents codicilles dans son édition ; cette distinction correspond dans le XML au découpage en divisions de types (@type) "testament" et "codicille". Il reste à rétablir cette articulation dans l'édition de Tuetey qui a transcrit les codicilles à la suite des testaments, sans marquer la distinction.</p>
+    <p>Les indentifiants. Cette édition sera enrichie progressivement (sur plusieurs années) de la transcription de nouveaux testaments ; l'ordre de ces transcriptions ne suit pas plus un quelconque ordre chronologique que l'ordre matériel des registres. Pour assurer l'homogénéité de l'identification des testaments, en restituer l'ordre chronologique dans l'édition, nous faisons le choix de reprendre la numérotation établie par A. Tuetey dans son "Index chronologique des Testaments insérés dans le registre du Parlement" (p. 15-26). M. Chaigne propose de faire suivre ce numéro d'une lettre majuscule pour marquer l'articulation entre le testament et ses éventuels codicilles (A pour le testament, B à Z pour les codicilles), comme suit :
+    </p>
+    <a:example>
+<text xml:id="testament_010">
+  <front/>
+  <body>
+    <div xml:lang="fr" type="transcription">
+      <div type="testament" xml:id="testament_010_A"/>
+      <div type="codicille" xml:id="testament_010_B"/>
+      <div type="codicille" xml:id="testament_010_C"/>
+    </div>
+  </body>
+</text>
+    </a:example>
+  </a:documentation>
+  <rng:define name="acte" combine="choice">
+    <rng:element name="text">
+      <rng:ref name="split.atts"/><!-- @xml:id -->
+      <rng:attribute name="n"/><!-- construit à partir de @xml:id on garde? -->
+      <rng:ref name="acte.front"/>
+      <rng:element name="body">
+        <rng:element name="div"><!-- div conteneur @type="transcription" -->
+          <rng:attribute name="type">
+            <rng:value>transcription</rng:value>
+          </rng:attribute>
+          <rng:element name="div"><!-- div obligatoire @type="testament" -->
+            <rng:attribute name="type">
+              <rng:value>testament</rng:value>
+            </rng:attribute>
+            <rng:ref name="divContent"/>
+          </rng:element>
+          <rng:zeroOrMore><!-- div @type="codicille" -->
+            <rng:element name="div">
+              <rng:attribute name="type">
+                <rng:value>codicille</rng:value>
+              </rng:attribute>
+              <rng:ref name="divContent"/>
+            </rng:element>
+          </rng:zeroOrMore>
+        </rng:element>
+      </rng:element>
+    </rng:element>
+  </rng:define>
+  <!-- le contenu des div @type 'testament' et 'codicille' -->
+  <rng:define name="divContent">
+    <rng:attribute name="xml:id"/>
+    <rng:attribute name="xml:lang">
+      <rng:choice>
+        <rng:value>fro</rng:value>
+        <rng:value>lat</rng:value>                
+      </rng:choice>
+    </rng:attribute>
+    <rng:optional>
+      <rng:attribute name="n"/>
+    </rng:optional>
+    <rng:optional>
+      <rng:ref name="head"/>
+    </rng:optional>
+    <rng:oneOrMore>
+      <rng:ref name="p"/>
+      <rng:optional>
+        <rng:ref name="pb"/>
+      </rng:optional>
+    </rng:oneOrMore>
+    <rng:optional>
+      <rng:ref name="note"/><!-- inscrire des notes historiques -->
+      <rng:ref name="app"/><!-- inscrire des notes d'apparat critique -->
+    </rng:optional>
+    <rng:optional>
+      <rng:ref name="signed"/>
+    </rng:optional>
+  </rng:define>
+  <!-- signature des testaments et codicilles -->
+  <rng:define name="signed">
+    <rng:element name="signed">
+      <rng:interleave>
+        <rng:oneOrMore>
+          <rng:element name="name">
+            <rng:text/>
+          </rng:element>
+        </rng:oneOrMore>
+        <rng:text/>
+        <rng:optional>
+          <rng:ref name="app"/>
+        </rng:optional>
+      </rng:interleave>
+    </rng:element>
+  </rng:define>
+  
+  <!-- le front des testaments -->
+  <a:documentation>
+    <h2>Cartouche de description d'un testament</h2>
+    <p>Le regroupement des testaments et des codicilles dans l'édition de Marion Chaigne contraint à définir la date et le témoin pour chaque partie, le testament à proprement parler et ses codicilles. L'attribut @corresp permet de lier la date et le witness à la bonne division.</p>
+    <a:example>
+<front>
+  <head>Jeanne de Dormans</head>
+    <docDate>
+      <date when="1407-05-25" corresp="#testament_010_A">1407, 25 mai</date>
+      <date when="1407-08-14" corresp="#testament_010_B">1407, 14 août</date>
+    </docDate>
+  <div type="tradition">
+    <listWit>
+      <witness corresp="#testament_010_A"><label>R</label>, fol. 183-185v. (Mention de collation, fol. 185v).</witness>
+      <witness corresp="#testament_010_B"><label>R</label>, fol. 187-187v. (Mention de collation, fol. 187). — <label>S</label>, fol. 9.</witness>
+    </listWit>
+  </div>
+</front>
+    </a:example>
+  </a:documentation>
+  <rng:define name="acte.front">
+    <rng:optional>
+      <rng:ref name="pb"/>
+    </rng:optional>
+    <rng:element name="front">
+      <rng:optional>
+        <rng:ref name="pb"/>
+      </rng:optional>
+      <rng:ref name="head"/>
+      <rng:oneOrMore>
+        <rng:element name="docDate">
+          <rng:oneOrMore>
+            <rng:ref name="testament.date"/>
+          </rng:oneOrMore>
+        </rng:element>
+      </rng:oneOrMore>
+      <rng:optional>
+        <rng:element name="argument">
+          <rng:oneOrMore>
+            <rng:ref name="p"/>
+          </rng:oneOrMore>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:ref name="note"/>
+      </rng:optional>
+      <rng:ref name="tradition"/><!-- ajout de @corresp ds la macro witness.extra -->
+    </rng:element>
+  </rng:define>
+  
+  <rng:define name="testament.date">
+    <rng:element name="date">
+      <a:documentation>
+        <p>Dans le front, les dates du testament et des codicilles sont normalisées (@when) et rattachées à la bonne division de la transcription (testament ou codicille, @corresp). Nous faisons le choix de ne pas utiliser dans ce contexte la macro partagée acte.date car les dates sont toujours précises au jour près (@when) et doivent être liées à la partie correspondante de la tanscription (ajout de @corresp).</p>
+        <a:example>
+          <docDate>
+            <!-- pour le testament -->
+            <date when="1400-04-29" corresp="#testament_018_A">29 avril 1400</date>
+            <!-- pour le premier codicille -->
+            <date when="1401-09-14" corresp="#testament_018_B">14 septembre 1401</date>
+            <!-- pour le deuxième codicille -->
+            <date when="1401-09-14" corresp="#testament_018_C">14 septembre 1401</date>
+            <!-- pour le troisième codicille -->
+            <date when="1401-09-15" corresp="#testament_018_D">15 septembre 1401</date>
+          </docDate>
+        </a:example>
+      </a:documentation>
+      <rng:group>
+        <rng:attribute name="when">
+          <rng:ref name="acte.date.type"/>
+        </rng:attribute>
+      </rng:group>
+      <rng:attribute name="corresp"/>
+      <rng:zeroOrMore>
+        <rng:choice>
+          <rng:text/>
+          <rng:ref name="abbr"/>
+          <rng:ref name="ref.note"/>
+        </rng:choice>
+      </rng:zeroOrMore>
+    </rng:element>
+  </rng:define>
+  <rng:define name="witness.atts" combine="choice"><!-- ajout de @corresp à la macro partagée listWit -->
+    <rng:attribute name="corresp"/>
+  </rng:define>
+  
+  <a:documentation>
+    <h2>Apparat critique</h2>
+    <p>
+      L'apparat critique des Testaments enregistrés au Parlement de Paris est conforme aux pratiques du <a href="#critique">schéma</a> de l'École des chartes.
+      L'essentiel des notes de l'apparat (numérotation alphabétique) sont des notes libres de l'éditeur.
+    </p>
+    <a:example>
+      <app><note>Ajouté en interligne.</note></app>
+    </a:example>
+    <p>Les notes historiques (numérotation décimale) s'encodent simplement, sur ce modèle :</p>
+    <a:example>
+      <note>Texte de la note</note>
+    </a:example>
+  </a:documentation>
+
+  <rng:include href="../../diple/schema/acte.rng"/>
+</rng:grammar>
